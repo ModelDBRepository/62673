@@ -1,0 +1,57 @@
+// vc_demo.hoc
+// demonstrates the six-state Na current model in voltage clamp from
+// Baranauskas and Martina 2006 J Neurosci 26(2):671-684
+
+// soma is used as a patch of membrane to insert Na model
+create soma
+access soma
+
+insert MCna1
+
+Na_extern_MCna1=10
+Na_intern_MCna1=34
+
+objref VC
+soma VC = new VClamp(0.5)
+
+VC.amp[0]=-76
+VC.amp[1]=-116
+VC.amp[2]=-36
+VC.dur[0]=100
+VC.dur[1]=70
+VC.dur[2]=70
+tstop = 240
+
+objref g1, g2
+g1 = new Graph()
+g1.exec_menu("Keep Lines")
+g2 = new Graph()
+g2.exec_menu("Keep Lines")
+
+objref cur, t_vec, x, y
+cur = new Vector()   // record the Na current
+t_vec = new Vector() // record the time steps
+
+cur.record(&soma.ina_MCna1(0.5))
+t_vec.record(&t)
+
+celsius = 12
+
+first_stop = int((VC.dur[0]+VC.dur[1])/dt)
+last_stop = tstop/dt
+
+for i=1,8 { 
+	init() 
+	run() 
+	x = t_vec.c(0,first_stop)
+	y = cur.c(0,first_stop)
+	y.line(g1,x)
+
+	x = t_vec.c(first_stop,last_stop)
+	y = cur.c(first_stop,last_stop)
+	y.line(g2,x)
+	VC.amp[1] += 10
+}
+
+g1.exec_menu("View = plot")
+g2.exec_menu("View = plot")
